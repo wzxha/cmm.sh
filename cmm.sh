@@ -63,7 +63,7 @@ clean() {
     fi
     if [ "$sure" == "y" ]; then
       debug_log "Cleaning...";
-      # rm -rf $1
+      rm -rf $1
       debug_log "Cleaned";
     elif [ "$sure" == "N" ]; then
       debug_log "Abort";

@@ -23,11 +23,24 @@
 #  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 #  THE SOFTWARE.
 
+# Xcode
 cache_dt_xcode="$HOME/Library/Caches/com.apple.dt.Xcode";
+# Carthage
 cache_carthage="$HOME/Library/Caches/org.carthage.CarthageKit";
+# QQ
+cache_qq_image="$HOME/Library/Containers/com.tencent.qq/Data/Library/Caches/Images"
+cache_qq_video="$HOME/Library/Containers/com.tencent.qq/Data/Library/Caches/Videos"
+cache_qq_avatar="$HOME/Library/Containers/com.tencent.qq/Data/Library/Caches/Avatar"
+items=(
+  $cache_dt_xcode
+  $cache_carthage
+  $cache_qq_image
+  $cache_qq_video
+  $cache_qq_avatar
+)
 debug_log() {
   if [[ $debug -eq 1 ]]; then
-    echo $1
+    echo -e $1;
   fi
 }
 get_size() {
@@ -35,7 +48,7 @@ get_size() {
     du -sh $1;
     return 0;
   else
-    debug_log "$1 isn't exists";
+    debug_log "\033[31m0 $1\033[0m";
     return 1;
   fi
 }
@@ -43,31 +56,55 @@ clean() {
   get_size $1;
   exist=$?
   if [[ $exist -eq 0 ]]; then
-    read -p "Are you sure clean $1: y/N " sure;
-      if [ "$sure" == "y" ]; then
-        debug_log "Cleaning...";
-        rm -rf $1
-        debug_log "Cleaned";
-      elif [ "$sure" == "N" ]; then
-        debug_log "Abort";
-      else
-        debug_log "Error, try again";
-        clean $1;
+    if [[ $force -eq 1 ]]; then
+      sure="y"
+    else
+      read -p "Are you sure clean $1: y/N " sure;
+    fi
+    if [ "$sure" == "y" ]; then
+      debug_log "Cleaning...";
+      # rm -rf $1
+      debug_log "Cleaned";
+    elif [ "$sure" == "N" ]; then
+      debug_log "Abort";
+    else
+      debug_log "Error, try again";
+      clean $1;
     fi
   fi
 }
+help() {
+  echo "usage: cmm [--version] [--force]
+command:
+  size
+  clean"
+}
+check_option() {
+  for argv in $@
+    do 
+      if [ "$argv" == "--version" ]; then
+        debug=1
+      elif [ "$argv" == "--force" ]; then
+        force=1
+      fi
+    done
+  return 0
+}
 command() {
-  if [ "$2" == "--version" ]; then
-    debug=1
-  fi
   if [ "$1" == "size" ]; then
-    get_size $cache_dt_xcode;
-    get_size $cache_carthage;
+    for i in ${items[@]}
+    do 
+      get_size ${i};
+    done
   elif [ "$1" == "clean" ]; then
-    clean $cache_dt_xcode;
-    clean $cache_carthage; 
+    for i in ${items[@]}
+    do 
+      clean ${i};
+    done
   else
     debug_log "Invaild command.";
+    help;
   fi
 }
-command $1 $2;
+check_option $@;
+command $1;
